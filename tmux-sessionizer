@@ -313,6 +313,11 @@ handle_split_session_cmd() {
     fi
 }
 
+# if [[ "$TS_INCLUDE_HOME" == "true" ]]; then
+if [[ "$TS_INCLUDE_HOME" == "true" ]] && ! tmux list-sessions -F "#{session_name}" 2>/dev/null | grep -q "^HOME$" ; then
+    tmux new-session -ds "HOME" -c "~"
+fi
+
 if [[ ! -z $session_cmd ]]; then
     handle_session_cmd
 elif [[ ! -z $user_selected ]]; then
@@ -327,9 +332,28 @@ fi
 
 if [[ "$selected" =~ ^\[TMUX\]\ (.+)$ ]]; then
     selected="${BASH_REMATCH[1]}"
+    selected_name=$selected
+elif [[ "$TS_NAME_PARENT" == "true" ]]; then
+    parent_dir=$(dirname "$selected")
+    for entry in "${TS_SEARCH_PATHS[@]}"; do
+        if [[ "$entry" =~ ^([^:]+):([0-9]+)$ ]]; then
+            dir="${BASH_REMATCH[1]}"
+        else
+            dir="$entry"
+        fi
+        if [[ "$dir" == "$parent_dir" ]]; then
+            selected_name=$(basename "$selected" | tr . _)
+            break;
+        fi
+    done
+    if [[ -z "$selected_name" ]]; then
+        selected_name=$(basename "$parent_dir" | tr . _)/$(basename "$selected" | tr . _)
+        log "$selected_name"
+    fi
+else
+    selected_name=$(basename "$selected" | tr . _)
 fi
 
-selected_name=$(basename "$selected" | tr . _)
 
 if ! is_tmux_running; then
     tmux new-session -ds "$selected_name" -c "$selected"

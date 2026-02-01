@@ -25,6 +25,8 @@ tmux-sessionizer config file
 ```bash
 # file: ~/.config/tmux-sessionizer/tmux-sessionizer.conf
 TS_SESSION_COMMANDS=(opencode .)
+TS_NAME_PARENT=true
+TS_INCLUDE_HOME=true
 ```
 
 There is one command which means you can call `tmux-sessionizer -s 0` only (`-s 1` is out of bounds)
